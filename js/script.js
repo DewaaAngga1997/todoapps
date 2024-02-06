@@ -6,20 +6,23 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
-// arti kode di atas
+//arti kode di atas
 
 // document.addEventListener("DOMContentLoaded", function () {...});:
-
 // Ini adalah event listener untuk event DOMContentLoaded. Ini berarti kode di dalam fungsi akan dijalankan setelah seluruh dokumen HTML selesai dimuat.
+
 // const submitForm = document.getElementById("form");:
-
 // Mengambil elemen formulir dengan ID "form" dan menyimpannya dalam variabel submitForm.
+
 // submitForm.addEventListener("submit", function (event) {...});:
-
 // Menambahkan event listener untuk event "submit" pada formulir. Ketika formulir tersebut di-submit, fungsi yang diberikan sebagai argumen akan dijalankan.
-// event.preventDefault(); digunakan untuk mencegah perilaku default dari event submit formulir, yang biasanya adalah pengiriman formulir dan pembaruan halaman.
-// Setelah mencegah perilaku default, fungsi addTodo() dipanggil.
 
+// event.preventDefault();
+// digunakan untuk mencegah perilaku default dari event submit formulir, yang biasanya adalah pengiriman formulir dan pembaruan halaman.
+// Setelah mencegah perilaku default,
+// fungsi addTodo() dipanggil.
+
+// KODE DI BAWAH UNTUK MENAMBAH FUNGSI TODO YANG AKAN DI JALANKAN KODE DI ATAS==========================================================================================================================
 function addTodo() {
   const textTodo = document.getElementById("title").value;
   const timestamp = document.getElementById("date").value;
@@ -45,6 +48,16 @@ function addTodo() {
 // Menambahkan objek tugas ke dalam array todos.
 // Memicu event dengan nama "RENDER_EVENT" menggunakan document.dispatchEvent(new Event(RENDER_EVENT));.
 // Ini  merujuk pada event khusus yang akan mengakibatkan pembaruan antarmuka pengguna untuk mencerminkan perubahan dalam daftar tugas (todos).
+/**
+ * [
+ *    {
+ *      id: <int>
+ *      task: <string>
+ *      timestamp: <string>
+ *      isCompleted: <boolean>
+ *    }
+ * ]
+ */
 
 function generateId() {
   return +new Date();
@@ -60,7 +73,8 @@ function generateTodoObject(id, task, timestamp, isCompleted) {
 }
 
 // Berikut adalah penjelasan kode diatas:
-// Fungsi generateId() berfungsi untuk menghasilkan identitas unik pada setiap item todo.
+// Fungsi generateId()
+// berfungsi untuk menghasilkan identitas unik pada setiap item todo.
 // Untuk menghasilkan identitas yang unik, kita manfaatkan +new Date() untuk mendapatkan timestamp pada JavaScript.
 // Fungsi generateTodoObject() berfungsi untuk membuat object baru dari data yang sudah disediakan dari inputan (parameter function),
 //  diantaranya id, nama todo (task), waktu (timestamp), dan isCompleted (penanda todo apakah sudah selesai atau belum).
@@ -221,6 +235,21 @@ function makeTodo(todoObject) {
     return null;
   }
 
+  //arti kode diatas
+  //   function findTodo(todoId) { ... }: Mendefinisikan sebuah fungsi bernama findTodo yang menerima satu parameter,
+  // yaitu todoId, yang akan digunakan untuk mencari tugas dengan ID tertentu.
+
+  // for (const todoItem of todos) { ... }: Membuka sebuah loop for...of yang akan mengiterasi melalui setiap elemen dalam array todos.
+  // Dalam setiap iterasi, elemen saat ini akan disimpan dalam variabel todoItem.
+
+  // if (todoItem.id === todoId) { return todoItem; }: Di dalam loop, setiap elemen tugas (todoItem) akan dibandingkan dengan todoId yang diberikan.
+  // Jika ID tugas saat ini cocok dengan todoId, maka elemen tugas tersebut akan dikembalikan (return).
+  // Ini berarti fungsi akan berhenti dan mengembalikan elemen tugas yang sesuai jika ID-nya ditemukan dalam array todos.
+
+  // return null;: Jika setelah loop selesai dieksekusi dan tidak ditemukan tugas dengan ID yang sesuai,
+  // maka fungsi akan mengembalikan null. Ini menunjukkan bahwa tidak ada tugas yang ditemukan dalam array todos dengan ID yang sesuai dengan yang diminta.
+
+  //KODE DI BAWAH UNTUK MENAMPILKAN TUGAS YANG SUDAH SELESAI==========================================================================================================================
   function addTaskToCompleted(todoId) {
     const todoTarget = findTodo(todoId);
 
@@ -228,6 +257,70 @@ function makeTodo(todoObject) {
 
     todoTarget.isCompleted = true;
     document.dispatchEvent(new Event(RENDER_EVENT));
+  }
+
+  //arti kode diatas
+  //   const todoTarget = findTodo(todoId);:
+  // Variabel todoTarget dideklarasikan dan diinisialisasi dengan hasil pemanggilan fungsi findTodo(todoId).
+  // Fungsi findTodo(todoId) digunakan untuk mencari tugas dengan ID yang sesuai dengan todoId yang diberikan.
+  // Hasil pencarian akan disimpan dalam variabel todoTarget.
+
+  // if (todoTarget == null) return;:
+  // Ini adalah pernyataan kondisional. Jika todoTarget adalah null (artinya tidak ada tugas yang ditemukan dengan ID yang sesuai),
+  // maka fungsi akan langsung keluar (return) tanpa melakukan langkah selanjutnya.
+  // Hal ini mencegah terjadinya kesalahan pada langkah-langkah selanjutnya jika tugas dengan ID yang diminta tidak ditemukan.
+
+  // todoTarget.isCompleted = true;:
+  // Setelah menemukan tugas dengan ID yang sesuai, properti isCompleted dari tugas tersebut diubah menjadi true,
+  // menandakan bahwa tugas tersebut telah diselesaikan.
+
+  // document.dispatchEvent(new Event(RENDER_EVENT));:
+  // Setelah menandai tugas sebagai "selesai", kode ini memicu (dispatch) suatu event dengan nama RENDER_EVENT.
+  // Ini mungkin merujuk pada event khusus yang telah didaftarkan sebelumnya, yang bertujuan untuk memperbarui antarmuka pengguna agar mencerminkan perubahan status tugas.
+  // Jadi, keseluruhan fungsi addTaskToCompleted(todoId) bertugas untuk menandai tugas dengan ID tertentu sebagai "selesai",
+
+  document.addEventListener(RENDER_EVENT, function () {
+    const uncompletedTODOList = document.getElementById("todos");
+    uncompletedTODOList.innerHTML = "";
+
+    const completedTODOList = document.getElementById("completed-todos");
+    completedTODOList.innerHTML = "";
+
+    for (const todoItem of todos) {
+      const todoElement = makeTodo(todoItem);
+      if (!todoItem.isCompleted) uncompletedTODOList.append(todoElement);
+      else completedTODOList.append(todoElement);
+    }
+  });
+
+  //KODE DI BAWAH UNTUK UNDO TUGAS YANG SUDAH SELESAI==================================================================================================================================
+  function removeTaskFromCompleted(todoId) {
+    const todoTarget = findTodoIndex(todoId);
+
+    if (todoTarget === -1) return;
+
+    todos.splice(todoTarget, 1);
+    document.dispatchEvent(new Event(RENDER_EVENT));
+  }
+
+  function undoTaskFromCompleted(todoId) {
+    const todoTarget = findTodo(todoId);
+
+    if (todoTarget == null) return;
+
+    todoTarget.isCompleted = false;
+    document.dispatchEvent(new Event(RENDER_EVENT));
+  }
+
+  //KODE DI BAWAH UNTUK MENGHAPUS TUGAS YANG SUDAH SELESAI==========================================================================================================================
+  function findTodoIndex(todoId) {
+    for (const index in todos) {
+      if (todos[index].id === todoId) {
+        return index;
+      }
+    }
+
+    return -1;
   }
 
   return container;

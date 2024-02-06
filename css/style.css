@@ -13,9 +13,10 @@ body {
 }
 
 header {
-  background: #5f30e2;
+  background: #0c2d57;
   padding: 16px;
   color: white;
+  text-align: center;
 }
 
 .wrapper {
@@ -79,7 +80,7 @@ input[type="text"],
 input[type="date"] {
   font-family: Raleway, sans-serif;
   background: #f5f1ff;
-  border: 2px solid #9475ea;
+  border: 2px solid #0c2d57;
   border-radius: 8px;
   padding: 16px;
   box-sizing: border-box;
@@ -92,7 +93,7 @@ input[type="date"] {
   font-family: Raleway, sans-serif;
   border-radius: 16px;
   padding: 12px 24px;
-  border: 2px solid #5f30e2;
+  border: 2px solid #0c2d57;
   color: black;
   font-size: 24px;
   margin-top: auto;
@@ -101,7 +102,7 @@ input[type="date"] {
 }
 
 .btn-submit:hover {
-  background: #5f30e2;
+  background: #0c2d57;
   color: white;
 }
 
