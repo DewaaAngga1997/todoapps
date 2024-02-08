@@ -1,53 +1,3 @@
-document.addEventListener("DOMContentLoaded", function () {
-  const submitForm = document.getElementById("form");
-  submitForm.addEventListener("submit", function (event) {
-    event.preventDefault();
-    addTodo();
-  });
-});
-
-//arti kode di atas
-
-// document.addEventListener("DOMContentLoaded", function () {...});:
-// Ini adalah event listener untuk event DOMContentLoaded. Ini berarti kode di dalam fungsi akan dijalankan setelah seluruh dokumen HTML selesai dimuat.
-
-// const submitForm = document.getElementById("form");:
-// Mengambil elemen formulir dengan ID "form" dan menyimpannya dalam variabel submitForm.
-
-// submitForm.addEventListener("submit", function (event) {...});:
-// Menambahkan event listener untuk event "submit" pada formulir. Ketika formulir tersebut di-submit, fungsi yang diberikan sebagai argumen akan dijalankan.
-
-// event.preventDefault();
-// digunakan untuk mencegah perilaku default dari event submit formulir, yang biasanya adalah pengiriman formulir dan pembaruan halaman.
-// Setelah mencegah perilaku default,
-// fungsi addTodo() dipanggil.
-
-// KODE DI BAWAH UNTUK MENAMBAH FUNGSI TODO YANG AKAN DI JALANKAN KODE DI ATAS==========================================================================================================================
-function addTodo() {
-  const textTodo = document.getElementById("title").value;
-  const timestamp = document.getElementById("date").value;
-
-  const generatedID = generateId();
-  const todoObject = generateTodoObject(
-    generatedID,
-    textTodo,
-    timestamp,
-    false
-  );
-  todos.push(todoObject);
-
-  document.dispatchEvent(new Event(RENDER_EVENT));
-}
-
-//arti dari kode di atas
-// function addTodo() {...}:
-// Ini adalah fungsi yang ditetapkan untuk menangani penambahan tugas (todo).
-// Mengambil nilai dari dua elemen input dengan ID "title" dan "date" dan menyimpannya dalam variabel textTodo dan timestamp.
-// Memanggil fungsi generateId() untuk membuat ID unik.
-// Memanggil fungsi generateTodoObject() dengan parameter yang sesuai untuk membuat objek tugas (todoObject).
-// Menambahkan objek tugas ke dalam array todos.
-// Memicu event dengan nama "RENDER_EVENT" menggunakan document.dispatchEvent(new Event(RENDER_EVENT));.
-// Ini  merujuk pada event khusus yang akan mengakibatkan pembaruan antarmuka pengguna untuk mencerminkan perubahan dalam daftar tugas (todos).
 /**
  * [
  *    {
@@ -58,6 +8,10 @@ function addTodo() {
  *    }
  * ]
  */
+const todos = [];
+const RENDER_EVENT = "render-todo";
+const SAVED_EVENT = "saved-todo";
+const STORAGE_KEY = "TODO_APPS";
 
 function generateId() {
   return +new Date();
@@ -72,62 +26,74 @@ function generateTodoObject(id, task, timestamp, isCompleted) {
   };
 }
 
-// Berikut adalah penjelasan kode diatas:
-// Fungsi generateId()
-// berfungsi untuk menghasilkan identitas unik pada setiap item todo.
-// Untuk menghasilkan identitas yang unik, kita manfaatkan +new Date() untuk mendapatkan timestamp pada JavaScript.
-// Fungsi generateTodoObject() berfungsi untuk membuat object baru dari data yang sudah disediakan dari inputan (parameter function),
-//  diantaranya id, nama todo (task), waktu (timestamp), dan isCompleted (penanda todo apakah sudah selesai atau belum).
-
-const todos = [];
-const RENDER_EVENT = "render-todo";
-
-// Berikut adalah penjelasan kode diatas.
-// Variabel todos adalah sebuah variabel berisi array yang akan menampung beberapa object. Object ini berisikan data-data Todo user.
-// Variabel RENDER_EVENT bertujuan untuk mendefinisikan Custom Event dengan nama 'render-todo'.
-// Custom event ini digunakan sebagai patokan dasar ketika ada perubahan data pada variabel todos,
-// seperti perpindahan todo (dari incomplete menjadi complete, dan sebaliknya), menambah todo, maupun menghapus todo.
-
-document.addEventListener(RENDER_EVENT, function () {
-  const uncompletedTODOList = document.getElementById("todos");
-  uncompletedTODOList.innerHTML = "";
-
+function findTodo(todoId) {
   for (const todoItem of todos) {
-    const todoElement = makeTodo(todoItem);
-    if (!todoItem.isCompleted) {
-      uncompletedTODOList.append(todoElement);
+    if (todoItem.id === todoId) {
+      return todoItem;
     }
   }
-});
+  return null;
+}
 
-//arti kode diatas
-// document.addEventListener(RENDER_EVENT, function () {...});:
-// Ini menambahkan event listener untuk event dengan nama RENDER_EVENT. Ketika event ini dipicu, fungsi yang diberikan sebagai argumen akan dijalankan.
-// const uncompletedTODOList = document.getElementById("todos");:
+function findTodoIndex(todoId) {
+  for (const index in todos) {
+    if (todos[index].id === todoId) {
+      return index;
+    }
+  }
+  return -1;
+}
 
-// Mengambil elemen HTML dengan ID "todos" dan menyimpannya dalam variabel uncompletedTODOList.
-// uncompletedTODOList.innerHTML = "";:
+/**
+ * Fungsi ini digunakan untuk memeriksa apakah localStorage didukung oleh browser atau tidak
+ *
+ * @returns boolean
+ */
+function isStorageExist() /* boolean */ {
+  if (typeof Storage === undefined) {
+    alert("Browser kamu tidak mendukung local storage");
+    return false;
+  }
+  return true;
+}
 
-// Mengosongkan (menghapus semua HTML di dalam) elemen dengan ID "todos". Ini dilakukan sebelum membangun kembali daftar tugas untuk menghindari duplikasi.
-// for (const todoItem of todos) {...}:
+/**
+ * Fungsi ini digunakan untuk menyimpan data ke localStorage
+ * berdasarkan KEY yang sudah ditetapkan sebelumnya.
+ */
+function saveData() {
+  if (isStorageExist()) {
+    const parsed /* string */ = JSON.stringify(todos);
+    localStorage.setItem(STORAGE_KEY, parsed);
+    document.dispatchEvent(new Event(SAVED_EVENT));
+  }
+}
 
-// Mengiterasi melalui array todos yang mungkin berisi objek-objek tugas (todo).
-// const todoElement = makeTodo(todoItem);:
+/**
+ * Fungsi ini digunakan untuk memuat data dari localStorage
+ * Dan memasukkan data hasil parsing ke variabel {@see todos}
+ */
+function loadDataFromStorage() {
+  const serializedData /* string */ = localStorage.getItem(STORAGE_KEY);
+  let data = JSON.parse(serializedData);
 
-// Memanggil fungsi makeTodo() dengan objek tugas (todoItem) sebagai argumen untuk membuat elemen HTML yang mewakili tugas tersebut. Hasilnya disimpan dalam variabel todoElement.
-// if (!todoItem.isCompleted) {...}:
+  if (data !== null) {
+    for (const todo of data) {
+      todos.push(todo);
+    }
+  }
 
-// Mengecek apakah tugas (todoItem) belum selesai (isCompleted: false).
-// uncompletedTODOList.append(todoElement);:
-
-// Jika tugas belum selesai, elemen HTML yang mewakili tugas tersebut (todoElement) ditambahkan ke dalam elemen dengan ID "todos". Ini berarti elemen daftar tugas yang belum selesai diperbarui.
+  document.dispatchEvent(new Event(RENDER_EVENT));
+}
 
 function makeTodo(todoObject) {
+  const { id, task, timestamp, isCompleted } = todoObject;
+
   const textTitle = document.createElement("h2");
-  textTitle.innerText = todoObject.task;
+  textTitle.innerText = task;
 
   const textTimestamp = document.createElement("p");
-  textTimestamp.innerText = todoObject.timestamp;
+  textTimestamp.innerText = timestamp;
 
   const textContainer = document.createElement("div");
   textContainer.classList.add("inner");
@@ -136,192 +102,112 @@ function makeTodo(todoObject) {
   const container = document.createElement("div");
   container.classList.add("item", "shadow");
   container.append(textContainer);
-  container.setAttribute("id", `todo-${todoObject.id}`);
+  container.setAttribute("id", `todo-${id}`);
 
-  //berikut adalah arti dari code di atas
-  // Mari kita kupas satu persatu beberapa kode di atas agar mendapatkan pemahaman secara menyeluruh.
-  // Mulai dari document.createElement(). Method tersebut berfungsi untuk membuat objek DOM, yakni elemen HTML.
-  // Sebagai contoh, jika Anda ingin membuat elemen Heading level-2 (seperti yang dicontoh di atas),
-  // Anda bisa mengisi argumentnya dengan nama dari tag tersebut sehingga hasilnya menjadi document.createElement("h2").
-  // Tipe argumen atau parameter yang diperlukan adalah string. Jika ingin membuat elemen lain seperti <div> dan sebagainya,
-  // Anda dapat menyesuaikan nama tag yang dituju pada parameter tersebut.
-
-  // Jika berhasil dibuat, elemen baru ini akan memiliki properti innerText.
-  // Properti ini berfungsi untuk menyematkan konten berupa teks (tak berformat HTML) pada elemen HTML.
-  // Jika kamu belum memahami apa fungsi dari innerText atau innerHTML
-
-  // Kemudian jika dilihat secara desain,
-  // teks yang berada di variabel textTimestamp dan textTitle merupakan konten atau child element dari <div> (variabel textContainer).
-  // Untuk mencapai ini, kita bisa menggunakan method append() dari variabel textContainer (elemen container) tersebut.
-
-  // Karena semua style sudah disediakan berdasarkan class-class selector tertentu pada CSS,
-  // kita perlu menerapkan style tersebut secara dinamis dengan menggunakan DOM.
-  // Salah satu cara yang bisa dilakukan adalah dengan menggunakan property classList,
-  // yang mana kita bisa menambahkan satu atau beberapa class dengan menggunakan classList.add().
-
-  // Kemudian, agar setiap todo item mudah di-track dan dikelola, kita perlu memberikan identitas (ID) unik pada setiap elemen todo tersebut.
-  // Untuk menetapkan id pada elemen, kita bisa menggunakan setAttributes("id", "").
-  // Agar elemen yang telah kita buat tadi bisa digunakan,
-  // kita perlu mengembalikan hasilnya dengan menggunakan return statement.
-
-  if (todoObject.isCompleted) {
+  if (isCompleted) {
     const undoButton = document.createElement("button");
     undoButton.classList.add("undo-button");
-
     undoButton.addEventListener("click", function () {
-      undoTaskFromCompleted(todoObject.id);
+      undoTaskFromCompleted(id);
     });
 
     const trashButton = document.createElement("button");
     trashButton.classList.add("trash-button");
-
     trashButton.addEventListener("click", function () {
-      removeTaskFromCompleted(todoObject.id);
+      removeTaskFromCompleted(id);
     });
 
     container.append(undoButton, trashButton);
-
-    //arti dari code diatas
-    // Untuk beberapa implementasi kode seperti createElement, classList.add(), dan append() sudah kita bahas sebelumnya.
-    // Intinya, beberapa kode tersebut membuat sebuah button dengan mengimplementasikan class check-button.
-    // Class tersebut adalah sebuah selector CSS yang terdapat beberapa konfigurasi style di dalamnya.
-
-    // Kemudian, agar tombol tersebut bisa diinteraksikan, kita perlu menerapkan event listener “click”,
-    // dengan fungsi yang memanggil fungsi lain sesuai dengan konteks dari tombol tersebut.
-    // Misalnya, pada tombol ini (checkButton) memanggil addTaskToCompleted, yang mana akan memindahkan todo dari rak “Yang harus dilakukan” ke rak “Yang sudah dilakukan”.
-
-    // Tombol lain, seperti undoButton & trashButton, juga menerapkan hal yang sama, di mana memanggil fungsi undoTaskFromCompleted dan removeTaskFromCompleted.
-    // Yang mana masing - masing akan memindahkan todo dari selesai ke belum selesai, dan menghapus todo.
   } else {
     const checkButton = document.createElement("button");
     checkButton.classList.add("check-button");
-
     checkButton.addEventListener("click", function () {
-      addTaskToCompleted(todoObject.id);
+      addTaskToCompleted(id);
     });
 
     container.append(checkButton);
   }
 
-  //arti kode diatas
-  // else {: Ini menandakan bahwa blok kode di dalamnya akan dieksekusi jika kondisi yang terkait dengannya di blok if sebelumnya tidak terpenuhi.
-  // Dengan kata lain, ini adalah bagian dari struktur pengendalian alur seperti if-else.
-
-  // const checkButton = document.createElement("button");:
-  // Membuat elemen button baru menggunakan document.createElement("button") dan menyimpannya dalam variabel checkButton.
-
-  // checkButton.classList.add("check-button");:
-  // Menambahkan kelas CSS "check-button" ke elemen button yang baru dibuat. Kebanyakan waktu,
-  // ini digunakan untuk memanipulasi tampilan dan gaya elemen dengan menggunakan aturan CSS yang telah ditentukan untuk kelas tersebut.
-
-  // checkButton.addEventListener("click", function () {...});:
-  // Menambahkan event listener pada elemen button untuk event "click".
-  // Artinya, ketika tombol ini diklik, fungsi yang didefinisikan di dalamnya akan dijalankan.
-
-  // addTaskToCompleted(todoObject.id);:
-  // Fungsi yang dipanggil saat tombol "check" diklik. Dengan menggunakan todoObject.id sebagai argumen,
-  // tampaknya ini berfungsi untuk menandai tugas (todo) sebagai selesai atau memindahkannya ke daftar tugas yang telah selesai.
-
-  // container.append(checkButton);: Menambahkan elemen button ke dalam elemen yang disebut container.
-  // Ini diasumsikan bahwa sebelumnya ada suatu variabel atau elemen yang disebut container di dalam scope yang sama.
-  // Menempatkan tombol check ini ke dalam container merupakan cara untuk menambahkan kontrol tombol ke dalam struktur tampilan yang sesuai.
-
-  function findTodo(todoId) {
-    for (const todoItem of todos) {
-      if (todoItem.id === todoId) {
-        return todoItem;
-      }
-    }
-    return null;
-  }
-
-  //arti kode diatas
-  //   function findTodo(todoId) { ... }: Mendefinisikan sebuah fungsi bernama findTodo yang menerima satu parameter,
-  // yaitu todoId, yang akan digunakan untuk mencari tugas dengan ID tertentu.
-
-  // for (const todoItem of todos) { ... }: Membuka sebuah loop for...of yang akan mengiterasi melalui setiap elemen dalam array todos.
-  // Dalam setiap iterasi, elemen saat ini akan disimpan dalam variabel todoItem.
-
-  // if (todoItem.id === todoId) { return todoItem; }: Di dalam loop, setiap elemen tugas (todoItem) akan dibandingkan dengan todoId yang diberikan.
-  // Jika ID tugas saat ini cocok dengan todoId, maka elemen tugas tersebut akan dikembalikan (return).
-  // Ini berarti fungsi akan berhenti dan mengembalikan elemen tugas yang sesuai jika ID-nya ditemukan dalam array todos.
-
-  // return null;: Jika setelah loop selesai dieksekusi dan tidak ditemukan tugas dengan ID yang sesuai,
-  // maka fungsi akan mengembalikan null. Ini menunjukkan bahwa tidak ada tugas yang ditemukan dalam array todos dengan ID yang sesuai dengan yang diminta.
-
-  //KODE DI BAWAH UNTUK MENAMPILKAN TUGAS YANG SUDAH SELESAI==========================================================================================================================
-  function addTaskToCompleted(todoId) {
-    const todoTarget = findTodo(todoId);
-
-    if (todoTarget == null) return;
-
-    todoTarget.isCompleted = true;
-    document.dispatchEvent(new Event(RENDER_EVENT));
-  }
-
-  //arti kode diatas
-  //   const todoTarget = findTodo(todoId);:
-  // Variabel todoTarget dideklarasikan dan diinisialisasi dengan hasil pemanggilan fungsi findTodo(todoId).
-  // Fungsi findTodo(todoId) digunakan untuk mencari tugas dengan ID yang sesuai dengan todoId yang diberikan.
-  // Hasil pencarian akan disimpan dalam variabel todoTarget.
-
-  // if (todoTarget == null) return;:
-  // Ini adalah pernyataan kondisional. Jika todoTarget adalah null (artinya tidak ada tugas yang ditemukan dengan ID yang sesuai),
-  // maka fungsi akan langsung keluar (return) tanpa melakukan langkah selanjutnya.
-  // Hal ini mencegah terjadinya kesalahan pada langkah-langkah selanjutnya jika tugas dengan ID yang diminta tidak ditemukan.
-
-  // todoTarget.isCompleted = true;:
-  // Setelah menemukan tugas dengan ID yang sesuai, properti isCompleted dari tugas tersebut diubah menjadi true,
-  // menandakan bahwa tugas tersebut telah diselesaikan.
-
-  // document.dispatchEvent(new Event(RENDER_EVENT));:
-  // Setelah menandai tugas sebagai "selesai", kode ini memicu (dispatch) suatu event dengan nama RENDER_EVENT.
-  // Ini mungkin merujuk pada event khusus yang telah didaftarkan sebelumnya, yang bertujuan untuk memperbarui antarmuka pengguna agar mencerminkan perubahan status tugas.
-  // Jadi, keseluruhan fungsi addTaskToCompleted(todoId) bertugas untuk menandai tugas dengan ID tertentu sebagai "selesai",
-
-  document.addEventListener(RENDER_EVENT, function () {
-    const uncompletedTODOList = document.getElementById("todos");
-    uncompletedTODOList.innerHTML = "";
-
-    const completedTODOList = document.getElementById("completed-todos");
-    completedTODOList.innerHTML = "";
-
-    for (const todoItem of todos) {
-      const todoElement = makeTodo(todoItem);
-      if (!todoItem.isCompleted) uncompletedTODOList.append(todoElement);
-      else completedTODOList.append(todoElement);
-    }
-  });
-
-  //KODE DI BAWAH UNTUK UNDO TUGAS YANG SUDAH SELESAI==================================================================================================================================
-  function removeTaskFromCompleted(todoId) {
-    const todoTarget = findTodoIndex(todoId);
-
-    if (todoTarget === -1) return;
-
-    todos.splice(todoTarget, 1);
-    document.dispatchEvent(new Event(RENDER_EVENT));
-  }
-
-  function undoTaskFromCompleted(todoId) {
-    const todoTarget = findTodo(todoId);
-
-    if (todoTarget == null) return;
-
-    todoTarget.isCompleted = false;
-    document.dispatchEvent(new Event(RENDER_EVENT));
-  }
-
-  //KODE DI BAWAH UNTUK MENGHAPUS TUGAS YANG SUDAH SELESAI==========================================================================================================================
-  function findTodoIndex(todoId) {
-    for (const index in todos) {
-      if (todos[index].id === todoId) {
-        return index;
-      }
-    }
-
-    return -1;
-  }
-
   return container;
 }
+
+function addTodo() {
+  const textTodo = document.getElementById("title").value;
+  const timestamp = document.getElementById("date").value;
+
+  const generatedID = generateId();
+  const todoObject = generateTodoObject(
+    generatedID,
+    textTodo,
+    timestamp,
+    false
+  );
+  todos.push(todoObject);
+
+  document.dispatchEvent(new Event(RENDER_EVENT));
+  saveData();
+}
+
+function addTaskToCompleted(todoId /* HTMLELement */) {
+  const todoTarget = findTodo(todoId);
+
+  if (todoTarget == null) return;
+
+  todoTarget.isCompleted = true;
+  document.dispatchEvent(new Event(RENDER_EVENT));
+  saveData();
+}
+
+function removeTaskFromCompleted(todoId /* HTMLELement */) {
+  const todoTarget = findTodoIndex(todoId);
+
+  if (todoTarget === -1) return;
+
+  todos.splice(todoTarget, 1);
+  document.dispatchEvent(new Event(RENDER_EVENT));
+  saveData();
+}
+
+function undoTaskFromCompleted(todoId /* HTMLELement */) {
+  const todoTarget = findTodo(todoId);
+  if (todoTarget == null) return;
+
+  todoTarget.isCompleted = false;
+  document.dispatchEvent(new Event(RENDER_EVENT));
+  saveData();
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  const submitForm /* HTMLFormElement */ = document.getElementById("form");
+
+  submitForm.addEventListener("submit", function (event) {
+    event.preventDefault();
+    addTodo();
+  });
+
+  if (isStorageExist()) {
+    loadDataFromStorage();
+  }
+});
+
+document.addEventListener(SAVED_EVENT, () => {
+  console.log("Data berhasil di simpan.");
+});
+
+document.addEventListener(RENDER_EVENT, function () {
+  const uncompletedTODOList = document.getElementById("todos");
+  const listCompleted = document.getElementById("completed-todos");
+
+  // clearing list item
+  uncompletedTODOList.innerHTML = "";
+  listCompleted.innerHTML = "";
+
+  for (const todoItem of todos) {
+    const todoElement = makeTodo(todoItem);
+    if (todoItem.isCompleted) {
+      listCompleted.append(todoElement);
+    } else {
+      uncompletedTODOList.append(todoElement);
+    }
+  }
+});
